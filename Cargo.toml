@@ -7,11 +7,21 @@ description = "Throughput comparison between rio-vt and the vt100 crate"
 repository = "https://github.com/raphamorim/rio-vt-benchmark"
 publish = false
 
-[dev-dependencies]
-criterion = { version = "0.6.0", features = ["html_reports"] }
+[dependencies]
 rio-vt = "=0.5.0-alpha.2"
 vt100 = "0.15"
 
+[dev-dependencies]
+criterion = { version = "0.6.0", features = ["html_reports"] }
+
 [[bench]]
 name = "snapshot"
+harness = false
+
+[[bench]]
+name = "workloads"
+harness = false
+
+[[bench]]
+name = "resize"
 harness = false

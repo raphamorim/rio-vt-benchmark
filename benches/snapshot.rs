@@ -1,59 +1,19 @@
-// Compares rio-vt and the vt100 crate on two operations:
+// Parsing and screen serialization on the mixed corpus:
 //
-//   process   feed a stream of program output through the parser into an
-//             80x24 screen
-//   snapshot  serialize the resulting visible screen back to ANSI
-//             (contents_formatted)
+//   process              feed the byte stream through the parser
+//   contents_formatted   serialize the visible screen back to ANSI
+//   contents_plain       extract the visible screen as plain text
 //
 // Run with `cargo bench`.
 
 use criterion::{
     black_box, criterion_group, criterion_main, BatchSize, Criterion, Throughput,
 };
-use rio_vt::ansi::CursorShape;
-use rio_vt::crosswords::{Crosswords, CrosswordsSize};
-use rio_vt::event::{VoidListener, WindowId};
-use rio_vt::performer::handler::Processor;
-
-const ROWS: u16 = 24;
-const COLS: u16 = 80;
-
-// A stand-in for everyday program output: colored directory listings, plain
-// lines, and the occasional full-screen redraw (clear + home + header).
-fn corpus() -> Vec<u8> {
-    let mut out = Vec::new();
-    for i in 0..3000u32 {
-        out.extend_from_slice(b"\x1b[1;34mdir\x1b[0m  \x1b[32mfile");
-        out.extend_from_slice(i.to_string().as_bytes());
-        out.extend_from_slice(b".rs\x1b[0m  \x1b[90msome regular output text here\x1b[0m\r\n");
-        if i % 40 == 0 {
-            out.extend_from_slice(b"\x1b[2J\x1b[H\x1b[1;33m== section header ==\x1b[0m\r\n");
-        }
-    }
-    out
-}
-
-fn new_rio() -> (Crosswords<VoidListener>, Processor) {
-    let term = Crosswords::new(
-        CrosswordsSize::new_with_dimensions(
-            COLS as usize,
-            ROWS as usize,
-            COLS as u32 * 8,
-            ROWS as u32 * 16,
-            8,
-            16,
-        ),
-        CursorShape::Block,
-        VoidListener,
-        WindowId::from(0),
-        0,
-        0,
-    );
-    (term, Processor::default())
-}
+use rio_vt::crosswords::formatter::FormatOptions;
+use rio_vt_benchmark::{corpus, new_rio, new_vt100};
 
 fn bench_process(c: &mut Criterion) {
-    let data = corpus();
+    let data = corpus::mixed();
     let mut group = c.benchmark_group("process");
     group.throughput(Throughput::Bytes(data.len() as u64));
 
@@ -66,7 +26,7 @@ fn bench_process(c: &mut Criterion) {
     });
     group.bench_function("vt100", |b| {
         b.iter_batched(
-            || vt100::Parser::new(ROWS, COLS, 0),
+            new_vt100,
             |mut parser| parser.process(&data),
             BatchSize::SmallInput,
         )
@@ -74,24 +34,33 @@ fn bench_process(c: &mut Criterion) {
     group.finish();
 }
 
-fn bench_snapshot(c: &mut Criterion) {
-    let data = corpus();
+fn bench_serialize(c: &mut Criterion) {
+    let data = corpus::mixed();
 
-    // Pre-fill both screens once; the snapshot is read-only.
+    // Pre-fill both screens once; serialization is read-only.
     let (mut rio_term, mut rio_parser) = new_rio();
     rio_parser.advance(&mut rio_term, &data);
-    let mut vt = vt100::Parser::new(ROWS, COLS, 0);
+    let mut vt = new_vt100();
     vt.process(&data);
 
-    let mut group = c.benchmark_group("contents_formatted");
-    group.bench_function("rio-vt", |b| {
+    let mut ansi = c.benchmark_group("contents_formatted");
+    ansi.bench_function("rio-vt", |b| {
         b.iter(|| black_box(rio_term.contents_formatted()))
     });
-    group.bench_function("vt100", |b| {
+    ansi.bench_function("vt100", |b| {
         b.iter(|| black_box(vt.screen().contents_formatted()))
     });
-    group.finish();
+    ansi.finish();
+
+    let mut plain = c.benchmark_group("contents_plain");
+    plain.bench_function("rio-vt", |b| {
+        b.iter(|| black_box(rio_term.format(FormatOptions::plain())))
+    });
+    plain.bench_function("vt100", |b| {
+        b.iter(|| black_box(vt.screen().contents()))
+    });
+    plain.finish();
 }
 
-criterion_group!(benches, bench_process, bench_snapshot);
+criterion_group!(benches, bench_process, bench_serialize);
 criterion_main!(benches);

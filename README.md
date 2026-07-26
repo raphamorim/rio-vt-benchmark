@@ -4,44 +4,79 @@ A small benchmark that compares [rio-vt](https://crates.io/crates/rio-vt) with t
 [vt100](https://crates.io/crates/vt100) crate.
 
 Both crates parse a terminal byte stream into an in-memory screen and can turn that
-screen back into ANSI. The benchmark measures the two halves separately on the same
-80x24 screen:
-
-* `process`: parse a stream of program output into the screen.
-* `contents_formatted`: serialize the visible screen back to ANSI.
+screen back into text or ANSI. The benchmark measures three things: parsing a stream
+into the screen, serializing a filled screen, and resizing a filled screen. Each is run
+on rio-vt and vt100 at a fixed 80x24 with no scrollback.
 
 ## Running
 
 ```
-cargo bench
+cargo bench                       # everything
+cargo bench --bench snapshot      # parse + serialize on the mixed corpus
+cargo bench --bench workloads     # parse across several input shapes
+cargo bench --bench resize        # resize a filled screen
 ```
 
 Criterion writes an HTML report under `target/criterion/`.
 
 ## Results
 
-The input is about 225 KB of colored program output: directory listings, plain lines,
-and a full-screen redraw every so often. Both parsers start from an empty 80x24 screen
-and read the same bytes; the snapshot case serializes an already-filled screen so it
-isolates formatting from parsing.
+Criterion medians on an Apple Silicon Mac, rio-vt 0.5.0-alpha.2 and vt100 0.15. Numbers
+depend on the CPU and the input, so run it yourself.
 
-Measured with rio-vt 0.5.0-alpha.2 and vt100 0.15 on an Apple Silicon Mac (criterion
-median):
+### Parsing (`process`)
 
-| Operation                        | rio-vt            | vt100             |
-| -------------------------------- | ----------------- | ----------------- |
-| `process` (parse)                | 766 µs, 294 MiB/s | 1.04 ms, 217 MiB/s |
-| `contents_formatted` (snapshot)  | 4.4 µs            | 18.8 µs           |
+Feeding a byte stream through the parser into the screen. Higher throughput is better.
 
-On this workload rio-vt parses about 1.35x faster and serializes about 4.2x faster.
-Exact figures depend on the CPU and the input, so run it yourself.
+| Workload            | rio-vt      | vt100      |
+| ------------------- | ----------- | ---------- |
+| mixed               | 305 MiB/s   | 216 MiB/s  |
+| ascii_plain         | 893 MiB/s   | 195 MiB/s  |
+| sgr_churn           | 233 MiB/s   | 317 MiB/s  |
+| scroll_storm        | 277 MiB/s   | 100 MiB/s  |
+| alt_screen_redraw   | 589 MiB/s   | 223 MiB/s  |
+| unicode_wide        | 248 MiB/s   | 197 MiB/s  |
 
-## What the numbers cover
+### Serializing a filled screen
 
-The corpus lives in `benches/snapshot.rs` (`corpus()`), a stand-in for everyday
-output: colored `ls`-style lines, plain text, and a clear-screen redraw at intervals.
-`process` is the hot path for anything that streams a lot of output; the snapshot cost
-matters when you serialize a screen, for example to restore it elsewhere.
+Reading the visible 80x24 screen back out. Lower time is better.
+
+| Operation                    | rio-vt   | vt100    |
+| ---------------------------- | -------- | -------- |
+| contents_formatted (ANSI)    | 4.4 µs   | 18.6 µs  |
+| contents_plain (text)        | 3.8 µs   | 14.0 µs  |
+
+### Resizing a filled screen
+
+Fill the screen, then resize 80x24 to 100x40 and back. Lower time is better.
+
+| Operation | rio-vt  | vt100   |
+| --------- | ------- | ------- |
+| resize    | 51 µs   | 7.4 µs  |
+
+## Reading the results
+
+rio-vt parses faster on most input shapes, and by a wide margin when the work is plain
+glyphs (`ascii_plain`), scrolling (`scroll_storm`), or full-screen repaints
+(`alt_screen_redraw`). It also serializes a screen several times faster, whether to ANSI
+or plain text.
+
+vt100 wins in two places. It parses `sgr_churn` faster: that input changes the
+foreground color before almost every character, and rio-vt's per-cell style interning
+costs more than vt100's per-cell style. And it resizes faster, because rio-vt's grid
+reflow does more bookkeeping than vt100's. Resize happens rarely (on a real window
+drag), so it matters far less than steady parsing, but it is a real difference.
+
+## What the workloads are
+
+The inputs live in `src/lib.rs` (`corpus`):
+
+* `mixed`: colored directory listings, plain lines, a full-screen redraw now and then.
+* `ascii_plain`: plain ASCII lines, no escape sequences.
+* `sgr_churn`: a color change before nearly every character.
+* `scroll_storm`: short lines and lots of newlines, mostly scrolling.
+* `alt_screen_redraw`: repeated clear, home, and full repaint, the shape a TUI produces.
+* `unicode_wide`: CJK text and emoji, so multi-byte decoding and wide characters.
 
 ## License
 
