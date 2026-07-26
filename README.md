@@ -28,14 +28,23 @@ depend on the CPU and the input, so run it yourself.
 
 Feeding a byte stream through the parser into the screen. Higher throughput is better.
 
-| Workload            | rio-vt      | vt100      |
-| ------------------- | ----------- | ---------- |
-| mixed               | 305 MiB/s   | 216 MiB/s  |
-| ascii_plain         | 893 MiB/s   | 195 MiB/s  |
-| sgr_churn           | 233 MiB/s   | 317 MiB/s  |
-| scroll_storm        | 277 MiB/s   | 100 MiB/s  |
-| alt_screen_redraw   | 589 MiB/s   | 223 MiB/s  |
-| unicode_wide        | 248 MiB/s   | 197 MiB/s  |
+```
+┌───────────────────┬───────────┬───────────┬─────────────┐
+│     Workload      │  rio-vt   │   vt100   │   winner    │
+├───────────────────┼───────────┼───────────┼─────────────┤
+│ mixed             │ 305 MiB/s │ 216 MiB/s │ rio-vt 1.4× │
+├───────────────────┼───────────┼───────────┼─────────────┤
+│ ascii_plain       │ 893 MiB/s │ 195 MiB/s │ rio-vt 4.6× │
+├───────────────────┼───────────┼───────────┼─────────────┤
+│ sgr_churn         │ 233 MiB/s │ 317 MiB/s │ vt100 1.4×  │
+├───────────────────┼───────────┼───────────┼─────────────┤
+│ scroll_storm      │ 277 MiB/s │ 100 MiB/s │ rio-vt 2.8× │
+├───────────────────┼───────────┼───────────┼─────────────┤
+│ alt_screen_redraw │ 589 MiB/s │ 223 MiB/s │ rio-vt 2.6× │
+├───────────────────┼───────────┼───────────┼─────────────┤
+│ unicode_wide      │ 248 MiB/s │ 197 MiB/s │ rio-vt 1.3× │
+└───────────────────┴───────────┴───────────┴─────────────┘
+```
 
 ### Serializing a filled screen
 
