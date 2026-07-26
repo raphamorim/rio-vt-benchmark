@@ -41,18 +41,18 @@ Feeding a byte stream through the parser into the screen. Higher throughput is b
 
 Reading the visible 80x24 screen back out. Lower time is better.
 
-| Operation                    | rio-vt   | vt100    |
-| ---------------------------- | -------- | -------- |
-| contents_formatted (ANSI)    | 4.4 µs   | 18.6 µs  |
-| contents_plain (text)        | 3.8 µs   | 14.0 µs  |
+| Operation                    | rio-vt   | vt100    | winner      |
+| ---------------------------- | -------- | -------- | ----------- |
+| contents_formatted (ANSI)    | 4.4 µs   | 18.6 µs  | rio-vt 4.2× |
+| contents_plain (text)        | 3.8 µs   | 14.0 µs  | rio-vt 3.7× |
 
 ### Resizing a filled screen
 
 Fill the screen, then resize 80x24 to 100x40 and back. Lower time is better.
 
-| Operation | rio-vt  | vt100   |
-| --------- | ------- | ------- |
-| resize    | 51 µs   | 7.4 µs  |
+| Operation | rio-vt  | vt100   | winner     |
+| --------- | ------- | ------- | ---------- |
+| resize    | 51 µs   | 7.4 µs  | vt100 6.9× |
 
 ## Reading the results
 
