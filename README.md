@@ -52,7 +52,7 @@ Fill the screen, then resize 80x24 to 100x40 and back. Lower time is better.
 
 | Operation | rio-vt  | vt100   | winner      |
 | --------- | ------- | ------- | ----------- |
-| resize    | 6.9 µs  | 7.5 µs  | rio-vt 1.1× |
+| resize    | 5.0 µs  | 7.5 µs  | rio-vt 1.5× |
 
 ## Reading the results
 
