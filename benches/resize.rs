@@ -7,7 +7,9 @@
 use criterion::{
     criterion_group, criterion_main, BatchSize, Criterion,
 };
-use rio_vt_benchmark::{corpus, new_rio, new_vt100, rio_dims};
+use rio_vt_benchmark::{
+    corpus, new_rio, new_rio_scrollback, new_vt100, rio_dims, COLS, ROWS,
+};
 
 fn bench_resize(c: &mut Criterion) {
     let data = corpus::mixed();
@@ -46,5 +48,45 @@ fn bench_resize(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, bench_resize);
+// Resize with soft-wrapped scrollback, which forces the reflow path: wrapped
+// lines rejoin on grow and re-split on shrink across the whole history.
+fn bench_resize_reflow(c: &mut Criterion) {
+    let data = corpus::wrapped();
+    let scrollback = 10_000;
+    let mut group = c.benchmark_group("resize_reflow");
+
+    group.bench_function("rio-vt", |b| {
+        b.iter_batched(
+            || {
+                let (mut term, mut parser) = new_rio_scrollback(scrollback);
+                parser.advance(&mut term, &data);
+                term
+            },
+            |mut term| {
+                term.resize(rio_dims(100, 40));
+                term.resize(rio_dims(80, 24));
+            },
+            BatchSize::LargeInput,
+        )
+    });
+
+    group.bench_function("vt100", |b| {
+        b.iter_batched(
+            || {
+                let mut parser = vt100::Parser::new(ROWS, COLS, scrollback);
+                parser.process(&data);
+                parser
+            },
+            |mut parser| {
+                parser.set_size(40, 100);
+                parser.set_size(24, 80);
+            },
+            BatchSize::LargeInput,
+        )
+    });
+
+    group.finish();
+}
+
+criterion_group!(benches, bench_resize, bench_resize_reflow);
 criterion_main!(benches);

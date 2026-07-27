@@ -40,6 +40,21 @@ pub fn new_rio() -> (Crosswords<VoidListener>, Processor) {
     (term, Processor::default())
 }
 
+/// A fresh rio-vt screen with a scrollback history limit, plus its parser.
+pub fn new_rio_scrollback(
+    scrollback: usize,
+) -> (Crosswords<VoidListener>, Processor) {
+    let term = Crosswords::new(
+        rio_dims(COLS as usize, ROWS as usize),
+        CursorShape::Block,
+        VoidListener,
+        WindowId::from(0),
+        0,
+        scrollback,
+    );
+    (term, Processor::default())
+}
+
 /// A fresh vt100 parser (it bundles state and parsing together).
 pub fn new_vt100() -> vt100::Parser {
     vt100::Parser::new(ROWS, COLS, 0)
@@ -94,6 +109,25 @@ pub mod corpus {
                 out.push(b);
             }
             out.extend_from_slice(b"\x1b[0m\r\n");
+        }
+        out
+    }
+
+    /// Long lines with no interior newline, so the terminal soft-wraps each
+    /// across several rows. Resizing this forces the reflow path (wrapped
+    /// lines rejoin on grow and re-split on shrink), which the short-line
+    /// corpora never exercise.
+    pub fn wrapped() -> Vec<u8> {
+        let mut out = Vec::new();
+        for i in 0..2000u32 {
+            out.extend_from_slice(b"line");
+            out.extend_from_slice(i.to_string().as_bytes());
+            out.push(b' ');
+            // ~240 columns of content, so at 80 cols each line wraps 3 rows.
+            for _ in 0..20 {
+                out.extend_from_slice(b"lorem ipsum ");
+            }
+            out.extend_from_slice(b"\r\n");
         }
         out
     }
