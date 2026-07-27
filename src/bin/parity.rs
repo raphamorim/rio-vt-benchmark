@@ -28,6 +28,7 @@ struct CellSig {
 struct Rendered {
     cells: Vec<CellSig>,
     cursor: (u16, u16),
+    cursor_hidden: bool,
     cols: u16,
 }
 
@@ -69,6 +70,7 @@ fn render(snapshot: &[u8], cols: u16, rows: u16) -> Rendered {
     Rendered {
         cells,
         cursor: screen.cursor_position(),
+        cursor_hidden: screen.hide_cursor(),
         cols,
     }
 }
@@ -102,6 +104,12 @@ fn diff(a: &Rendered, b: &Rendered) -> Vec<String> {
     let mut out = Vec::new();
     if a.cursor != b.cursor {
         out.push(format!("cursor: vt100={:?} rio-vt={:?}", a.cursor, b.cursor));
+    }
+    if a.cursor_hidden != b.cursor_hidden {
+        out.push(format!(
+            "cursor hidden: vt100={} rio-vt={}",
+            a.cursor_hidden, b.cursor_hidden
+        ));
     }
     if a.cells.len() != b.cells.len() {
         out.push(format!(
@@ -191,6 +199,18 @@ fn scenarios() -> Vec<Scenario> {
         }
     }
     v.push(Scenario { name: "sgr_combos", stream: s, resize_to: None });
+
+    // hidden cursor: a TUI that hid the cursor while drawing a frame. The
+    // snapshot must restore the hidden state, not leave a stray cursor.
+    let mut s = Vec::new();
+    s.extend_from_slice(b"\x1b[2J\x1b[H\x1b[?25l");
+    s.extend_from_slice(b"\x1b[1;36mrendering frame\x1b[0m\r\n");
+    for i in 0..5u32 {
+        s.extend_from_slice(b"  row ");
+        s.extend_from_slice(i.to_string().as_bytes());
+        s.extend_from_slice(b"\r\n");
+    }
+    v.push(Scenario { name: "hidden_cursor", stream: s, resize_to: None });
 
     // unicode + wide characters.
     let mut s = Vec::new();
