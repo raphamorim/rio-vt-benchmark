@@ -209,9 +209,9 @@ dependencies = [
 
 [[package]]
 name = "corcovado"
-version = "0.5.0-alpha.2"
+version = "0.5.0-alpha.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5bf06290004e50c86a864a0f9be0659fe97f90797db7fb203756fc0a0b89b5c"
+checksum = "6602941bdb2366c939f8a5730ca90e47f6d27c9789b36cf65df56af577dc76bf"
 dependencies = [
  "cfg-if 0.1.10",
  "fuchsia-zircon",
@@ -1128,9 +1128,9 @@ checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
 
 [[package]]
 name = "rio-grapheme-width"
-version = "0.5.0-alpha.2"
+version = "0.5.0-alpha.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed7b116b7f7845f42921856ffd767e75598953dca48a3b2bf4726be5a4519df6"
+checksum = "15fdbce1b5efa5bd39b30cca54c2ca7f4a3bf9f277c96f856d9ff36dd737ea06"
 dependencies = [
  "phf",
  "ucd-trie",
@@ -1138,9 +1138,9 @@ dependencies = [
 
 [[package]]
 name = "rio-graphics"
-version = "0.5.0-alpha.2"
+version = "0.5.0-alpha.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53834f3d7c654dead3a1647c8a9e3f78fc9e94a42ac0b639fdd57cd565ea769a"
+checksum = "67c71e5c9cf230338cc7eff1aa3d096deec85ae978a3605a22a91ee9f1a5f57d"
 dependencies = [
  "image",
  "parking_lot",
@@ -1151,9 +1151,9 @@ dependencies = [
 
 [[package]]
 name = "rio-vt"
-version = "0.5.0-alpha.2"
+version = "0.5.0-alpha.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "67e1c2df8167d46e82573f944a056c9fb4e74893d681d3fcc73a829a7b0f3849"
+checksum = "454a6e62982c7fec5e7fed5315db7723ae3bf695ff3ad79a6cd6cfb2055ce16e"
 dependencies = [
  "base64",
  "bitflags 2.13.1",
@@ -1374,9 +1374,9 @@ dependencies = [
 
 [[package]]
 name = "teletypewriter"
-version = "0.5.0-alpha.2"
+version = "0.5.0-alpha.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d917c08665f8f251525b53777ec21b741d7db472247776d697b04945c30ceea"
+checksum = "4c36b0dacb9b09f99a1b3171f9516ea1b4e16db76cc11066eeed3c59e5f61a98"
 dependencies = [
  "corcovado",
  "dirs",

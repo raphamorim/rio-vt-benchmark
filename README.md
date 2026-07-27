@@ -21,7 +21,7 @@ Criterion writes an HTML report under `target/criterion/`.
 
 ## Results
 
-Criterion medians on an Apple Silicon Mac, rio-vt 0.5.0-alpha.2 and vt100 0.15. Numbers
+Criterion medians on an Apple Silicon Mac, rio-vt 0.5.0-alpha.3 and vt100 0.15. Numbers
 depend on the CPU and the input, so run it yourself.
 
 ### Parsing (`process`)
@@ -30,12 +30,12 @@ Feeding a byte stream through the parser into the screen. Higher throughput is b
 
 | Workload            | rio-vt      | vt100      | winner      |
 | ------------------- | ----------- | ---------- | ----------- |
-| mixed               | 305 MiB/s   | 216 MiB/s  | rio-vt 1.4× |
-| ascii_plain         | 893 MiB/s   | 195 MiB/s  | rio-vt 4.6× |
-| sgr_churn           | 233 MiB/s   | 317 MiB/s  | vt100 1.4×  |
-| scroll_storm        | 277 MiB/s   | 100 MiB/s  | rio-vt 2.8× |
-| alt_screen_redraw   | 589 MiB/s   | 223 MiB/s  | rio-vt 2.6× |
-| unicode_wide        | 248 MiB/s   | 197 MiB/s  | rio-vt 1.3× |
+| mixed               | 302 MiB/s   | 221 MiB/s  | rio-vt 1.4× |
+| ascii_plain         | 835 MiB/s   | 196 MiB/s  | rio-vt 4.3× |
+| sgr_churn           | 235 MiB/s   | 349 MiB/s  | vt100 1.5×  |
+| scroll_storm        | 274 MiB/s   | 101 MiB/s  | rio-vt 2.7× |
+| alt_screen_redraw   | 588 MiB/s   | 231 MiB/s  | rio-vt 2.5× |
+| unicode_wide        | 248 MiB/s   | 203 MiB/s  | rio-vt 1.2× |
 
 ### Serializing a filled screen
 
@@ -43,29 +43,28 @@ Reading the visible 80x24 screen back out. Lower time is better.
 
 | Operation                    | rio-vt   | vt100    | winner      |
 | ---------------------------- | -------- | -------- | ----------- |
-| contents_formatted (ANSI)    | 4.4 µs   | 18.6 µs  | rio-vt 4.2× |
-| contents_plain (text)        | 3.8 µs   | 14.0 µs  | rio-vt 3.7× |
+| contents_formatted (ANSI)    | 4.3 µs   | 18.6 µs  | rio-vt 4.3× |
+| contents_plain (text)        | 3.8 µs   | 13.9 µs  | rio-vt 3.7× |
 
 ### Resizing a filled screen
 
 Fill the screen, then resize 80x24 to 100x40 and back. Lower time is better.
 
-| Operation | rio-vt  | vt100   | winner     |
-| --------- | ------- | ------- | ---------- |
-| resize    | 51 µs   | 7.4 µs  | vt100 6.9× |
+| Operation | rio-vt  | vt100   | winner      |
+| --------- | ------- | ------- | ----------- |
+| resize    | 6.9 µs  | 7.5 µs  | rio-vt 1.1× |
 
 ## Reading the results
 
 rio-vt parses faster on most input shapes, and by a wide margin when the work is plain
 glyphs (`ascii_plain`), scrolling (`scroll_storm`), or full-screen repaints
 (`alt_screen_redraw`). It also serializes a screen several times faster, whether to ANSI
-or plain text.
+or plain text, and it now edges out vt100 on resize while still reflowing wrapped lines
+(vt100 skips reflow, so it clips content on shrink and never re-joins wrapped lines).
 
-vt100 wins in two places. It parses `sgr_churn` faster: that input changes the
-foreground color before almost every character, and rio-vt's per-cell style interning
-costs more than vt100's per-cell style. And it resizes faster, because rio-vt's grid
-reflow does more bookkeeping than vt100's. Resize happens rarely (on a real window
-drag), so it matters far less than steady parsing, but it is a real difference.
+vt100 wins in one place: it parses `sgr_churn` faster. That input changes the foreground
+color before almost every character, and rio-vt's per-cell style interning costs more
+than vt100's per-cell style.
 
 ## What the workloads are
 
