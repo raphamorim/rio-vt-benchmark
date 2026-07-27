@@ -8,7 +8,7 @@ use criterion::{
     criterion_group, criterion_main, BatchSize, Criterion,
 };
 use rio_vt_benchmark::{
-    corpus, new_rio, new_rio_scrollback, new_vt100, rio_dims, COLS, ROWS,
+    alacritty, corpus, new_rio, new_rio_scrollback, new_vt100, rio_dims, COLS, ROWS,
 };
 
 fn bench_resize(c: &mut Criterion) {
@@ -40,6 +40,21 @@ fn bench_resize(c: &mut Criterion) {
             |mut parser| {
                 parser.set_size(40, 100);
                 parser.set_size(24, 80);
+            },
+            BatchSize::SmallInput,
+        )
+    });
+
+    group.bench_function("alacritty", |b| {
+        b.iter_batched(
+            || {
+                let (mut term, mut parser) = alacritty::new(0);
+                parser.advance(&mut term, &data);
+                term
+            },
+            |mut term| {
+                term.resize(alacritty::size(100, 40));
+                term.resize(alacritty::size(80, 24));
             },
             BatchSize::SmallInput,
         )
@@ -80,6 +95,21 @@ fn bench_resize_reflow(c: &mut Criterion) {
             |mut parser| {
                 parser.set_size(40, 100);
                 parser.set_size(24, 80);
+            },
+            BatchSize::LargeInput,
+        )
+    });
+
+    group.bench_function("alacritty", |b| {
+        b.iter_batched(
+            || {
+                let (mut term, mut parser) = alacritty::new(scrollback);
+                parser.advance(&mut term, &data);
+                term
+            },
+            |mut term| {
+                term.resize(alacritty::size(100, 40));
+                term.resize(alacritty::size(80, 24));
             },
             BatchSize::LargeInput,
         )

@@ -1,45 +1,45 @@
 # rio-vt-benchmark
 
-A small benchmark that compares [rio-vt](https://crates.io/crates/rio-vt) with the
-[vt100](https://crates.io/crates/vt100) crate.
+A benchmark comparing [rio-vt](https://crates.io/crates/rio-vt) against other terminal
+engines: [vt100](https://crates.io/crates/vt100) and
+[alacritty_terminal](https://crates.io/crates/alacritty_terminal).
 
-Both crates parse a terminal byte stream into an in-memory screen and can turn that
-screen back into text or ANSI. The benchmark measures three things: parsing a stream
-into the screen, serializing a filled screen, and resizing a filled screen. Each is run
-on rio-vt and vt100 at a fixed 80x24 with no scrollback.
+Each parses a terminal byte stream into an in-memory screen. The benchmark measures
+parsing a stream, serializing a filled screen (rio-vt and vt100 only, which expose a
+screen-to-ANSI dump), and resizing a filled screen. Everything runs at a fixed 80x24.
 
 ## Running
 
 ```
-cargo bench                       # everything
-cargo bench --bench snapshot      # parse + serialize on the mixed corpus
-cargo bench --bench workloads     # parse across several input shapes
-cargo bench --bench resize        # resize a filled screen
+cargo bench                    # everything
+cargo bench --bench workloads  # parse across several input shapes
+cargo bench --bench resize     # resize a filled screen
 ```
 
 Criterion writes an HTML report under `target/criterion/`.
 
 ## Results
 
-Criterion medians on an Apple Silicon Mac, rio-vt 0.5.0-alpha.3 and vt100 0.15. Numbers
-depend on the CPU and the input, so run it yourself.
+Criterion medians on an Apple Silicon Mac: rio-vt 0.5.0-alpha.3, vt100 0.15,
+alacritty_terminal 0.26. Numbers depend on the CPU and the input, so run it yourself.
 
 ### Parsing (`process`)
 
 Feeding a byte stream through the parser into the screen. Higher throughput is better.
 
-| Workload            | rio-vt      | vt100      | winner      |
-| ------------------- | ----------- | ---------- | ----------- |
-| mixed               | 302 MiB/s   | 221 MiB/s  | rio-vt 1.4× |
-| ascii_plain         | 835 MiB/s   | 196 MiB/s  | rio-vt 4.3× |
-| sgr_churn           | 235 MiB/s   | 349 MiB/s  | vt100 1.5×  |
-| scroll_storm        | 274 MiB/s   | 101 MiB/s  | rio-vt 2.7× |
-| alt_screen_redraw   | 588 MiB/s   | 231 MiB/s  | rio-vt 2.5× |
-| unicode_wide        | 248 MiB/s   | 203 MiB/s  | rio-vt 1.2× |
+| Workload            | rio-vt      | vt100      | alacritty   | winner       |
+| ------------------- | ----------- | ---------- | ----------- | ------------ |
+| mixed               | 302 MiB/s   | 221 MiB/s  | 254 MiB/s   | rio-vt       |
+| ascii_plain         | 835 MiB/s   | 196 MiB/s  | 279 MiB/s   | rio-vt 3.0×  |
+| sgr_churn           | 235 MiB/s   | 349 MiB/s  | 332 MiB/s   | vt100        |
+| scroll_storm        | 274 MiB/s   | 101 MiB/s  | 266 MiB/s   | rio-vt       |
+| alt_screen_redraw   | 588 MiB/s   | 231 MiB/s  | 282 MiB/s   | rio-vt 2.1×  |
+| unicode_wide        | 248 MiB/s   | 203 MiB/s  | 337 MiB/s   | alacritty    |
 
 ### Serializing a filled screen
 
-Reading the visible 80x24 screen back out. Lower time is better.
+Reading the visible 80x24 screen back out. Lower time is better. Only rio-vt and vt100
+expose a screen-to-ANSI/text dump, so alacritty is not shown here.
 
 | Operation                    | rio-vt   | vt100    | winner      |
 | ---------------------------- | -------- | -------- | ----------- |
@@ -50,21 +50,22 @@ Reading the visible 80x24 screen back out. Lower time is better.
 
 Fill the screen, then resize 80x24 to 100x40 and back. Lower time is better.
 
-| Operation | rio-vt  | vt100   | winner      |
-| --------- | ------- | ------- | ----------- |
-| resize    | 5.0 µs  | 7.5 µs  | rio-vt 1.5× |
+| Operation | rio-vt  | vt100   | alacritty | winner      |
+| --------- | ------- | ------- | --------- | ----------- |
+| resize    | 5.0 µs  | 7.5 µs  | 227 µs    | rio-vt      |
 
 ## Reading the results
 
 rio-vt parses faster on most input shapes, and by a wide margin when the work is plain
-glyphs (`ascii_plain`), scrolling (`scroll_storm`), or full-screen repaints
-(`alt_screen_redraw`). It also serializes a screen several times faster, whether to ANSI
-or plain text, and it now edges out vt100 on resize while still reflowing wrapped lines
-(vt100 skips reflow, so it clips content on shrink and never re-joins wrapped lines).
+glyphs (`ascii_plain`) or full-screen repaints (`alt_screen_redraw`). It also serializes
+a screen several times faster, and resizes far faster than either alacritty or vt100
+while still reflowing wrapped lines (vt100 skips reflow, so it clips content on shrink;
+alacritty reflows but is two orders of magnitude slower here).
 
-vt100 wins in one place: it parses `sgr_churn` faster. That input changes the foreground
-color before almost every character, and rio-vt's per-cell style interning costs more
-than vt100's per-cell style.
+alacritty is competitive on parsing, landing between rio-vt and vt100 on most shapes and
+taking `unicode_wide` outright. vt100 still parses `sgr_churn` fastest, where rio-vt's
+per-cell style interning costs more than a plain per-cell style. On resize, alacritty is
+the outlier: it reflows its grid far more expensively than either rio-vt or vt100.
 
 ## What the workloads are
 

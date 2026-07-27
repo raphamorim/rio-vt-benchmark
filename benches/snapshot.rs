@@ -10,7 +10,7 @@ use criterion::{
     black_box, criterion_group, criterion_main, BatchSize, Criterion, Throughput,
 };
 use rio_vt::crosswords::formatter::FormatOptions;
-use rio_vt_benchmark::{corpus, new_rio, new_vt100};
+use rio_vt_benchmark::{alacritty, corpus, new_rio, new_vt100};
 
 fn bench_process(c: &mut Criterion) {
     let data = corpus::mixed();
@@ -28,6 +28,13 @@ fn bench_process(c: &mut Criterion) {
         b.iter_batched(
             new_vt100,
             |mut parser| parser.process(&data),
+            BatchSize::SmallInput,
+        )
+    });
+    group.bench_function("alacritty", |b| {
+        b.iter_batched(
+            || alacritty::new(0),
+            |(mut term, mut parser)| parser.advance(&mut term, &data),
             BatchSize::SmallInput,
         )
     });

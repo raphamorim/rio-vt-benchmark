@@ -60,6 +60,33 @@ pub fn new_vt100() -> vt100::Parser {
     vt100::Parser::new(ROWS, COLS, 0)
 }
 
+/// alacritty_terminal helpers: a `Term` plus the `vte` ANSI parser it feeds.
+pub mod alacritty {
+    use super::{COLS, ROWS};
+    use alacritty_terminal::event::VoidListener;
+    use alacritty_terminal::term::test::TermSize;
+    use alacritty_terminal::term::{Config, Term};
+    use alacritty_terminal::vte::ansi::Processor;
+
+    pub type Screen = Term<VoidListener>;
+
+    #[inline]
+    pub fn size(cols: usize, rows: usize) -> TermSize {
+        TermSize::new(cols, rows)
+    }
+
+    /// A fresh 80x24 terminal with `scrollback` history, plus its parser
+    /// (alacritty keeps state and parser separate, like rio-vt).
+    pub fn new(scrollback: usize) -> (Screen, Processor) {
+        let cfg = Config {
+            scrolling_history: scrollback,
+            ..Default::default()
+        };
+        let term = Term::new(cfg, &size(COLS as usize, ROWS as usize), VoidListener);
+        (term, Processor::new())
+    }
+}
+
 /// Byte streams fed to the parsers. Each returns roughly a few hundred KB so a
 /// single iteration is long enough to time cleanly.
 pub mod corpus {
