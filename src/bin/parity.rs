@@ -13,7 +13,9 @@ use rio_vt_benchmark::{new_rio_scrollback, rio_dims};
 
 const COLS: u16 = 80;
 const ROWS: u16 = 24;
-const SCROLLBACK: usize = 1000;
+// The reconnect-snapshot Screen is created with no scrollback, so match that:
+// it changes how a row-grow resize sources new rows.
+const SCROLLBACK: usize = 0;
 
 #[derive(PartialEq, Eq)]
 struct CellSig {
