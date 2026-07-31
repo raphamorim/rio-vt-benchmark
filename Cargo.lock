@@ -210,9 +210,9 @@ dependencies = [
 
 [[package]]
 name = "corcovado"
-version = "0.5.1"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d4485657270f8214253b07f52e3a3e06affdd17fa4e06d4fc5b4f0d115f1258d"
+checksum = "cd05e26c10dcb00065bab74f7871c7bb8623d11319245107be65399a823734d1"
 dependencies = [
  "cfg-if 0.1.10",
  "fuchsia-zircon",
@@ -968,9 +968,9 @@ checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
 
 [[package]]
 name = "rio-grapheme-width"
-version = "0.5.1"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50dba44bbb5eb9f53186c804ab1a46a97ed9f0475d434767ef8c9b3ea8d24ec2"
+checksum = "3aa3b2ac35b9f82e8bbea84b250c6e20c18008480c69bef513ccd04f540668c8"
 dependencies = [
  "phf",
  "ucd-trie",
@@ -978,9 +978,9 @@ dependencies = [
 
 [[package]]
 name = "rio-graphics"
-version = "0.5.1"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "757d408f94ad2d8cd465a005908c86c62dbab55a1b8ba21444db7c46a3b37af4"
+checksum = "fe345f48460f7ca26cd0ed608da704f3cf960f1b6b7c4bee623a09e07630e243"
 dependencies = [
  "rustc-hash",
  "tracing",
@@ -988,9 +988,9 @@ dependencies = [
 
 [[package]]
 name = "rio-vt"
-version = "0.5.0-alpha.4"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "863f24ed2a27a7f7fc5b7fcdaf4512724b980ed8ee782d9d2c4a2b9c4ad61f4f"
+checksum = "b0c6aea518ba04c39329890a641d3f94e8f2d875b58c363db60bff68d8458649"
 dependencies = [
  "base64",
  "bitflags 2.13.1",
@@ -1233,9 +1233,9 @@ dependencies = [
 
 [[package]]
 name = "teletypewriter"
-version = "0.5.1"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90ae4da081d603b942e2ed62d063e7a5cf083427caf26c7627c17a1b6a0b22b6"
+checksum = "46cb37087a3295162e2ab3994d2478a9dad4410993d8b15c5a306b70a3c153d1"
 dependencies = [
  "corcovado",
  "dirs",

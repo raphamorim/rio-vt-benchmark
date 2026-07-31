@@ -8,7 +8,7 @@ repository = "https://github.com/raphamorim/rio-vt-benchmark"
 publish = false
 
 [dependencies]
-rio-vt = "=0.5.0-alpha.4"
+rio-vt = "=0.5.3"
 vt100 = "0.15"
 alacritty_terminal = "0.26"
 libghostty-vt = { git = "https://github.com/uzaaft/libghostty-rs", rev = "72ac98f292879bf9f788fcbb11238c562a1eebe6", optional = true }
