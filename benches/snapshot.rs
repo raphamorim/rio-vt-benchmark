@@ -9,8 +9,9 @@
 use criterion::{
     black_box, criterion_group, criterion_main, BatchSize, Criterion, Throughput,
 };
+use libghostty_vt::fmt::{Format, Formatter, FormatterOptions};
 use rio_vt::crosswords::formatter::FormatOptions;
-use rio_vt_benchmark::{alacritty, corpus, new_rio, new_vt100};
+use rio_vt_benchmark::{alacritty, corpus, ghostty, new_rio, new_vt100};
 
 fn bench_process(c: &mut Criterion) {
     let data = corpus::mixed();
@@ -38,17 +39,32 @@ fn bench_process(c: &mut Criterion) {
             BatchSize::SmallInput,
         )
     });
+    group.bench_function("ghostty", |b| {
+        b.iter_batched(
+            || ghostty::new(0),
+            |mut term| term.vt_write(&data),
+            BatchSize::SmallInput,
+        )
+    });
     group.finish();
 }
 
 fn bench_serialize(c: &mut Criterion) {
     let data = corpus::mixed();
 
-    // Pre-fill both screens once; serialization is read-only.
+    // Pre-fill the screens once; serialization is read-only.
     let (mut rio_term, mut rio_parser) = new_rio();
     rio_parser.advance(&mut rio_term, &data);
     let mut vt = new_vt100();
     vt.process(&data);
+    let mut gt = ghostty::new(0);
+    gt.vt_write(&data);
+    let mut gt_ansi =
+        Formatter::new(&gt, FormatterOptions::new().with_format(Format::Vt))
+            .expect("ghostty formatter");
+    let mut gt_plain =
+        Formatter::new(&gt, FormatterOptions::new().with_format(Format::Plain))
+            .expect("ghostty formatter");
 
     let mut ansi = c.benchmark_group("contents_formatted");
     ansi.bench_function("rio-vt", |b| {
@@ -56,6 +72,9 @@ fn bench_serialize(c: &mut Criterion) {
     });
     ansi.bench_function("vt100", |b| {
         b.iter(|| black_box(vt.screen().contents_formatted()))
+    });
+    ansi.bench_function("ghostty", |b| {
+        b.iter(|| black_box(gt_ansi.format_alloc(None).expect("format")))
     });
     ansi.finish();
 
@@ -65,6 +84,9 @@ fn bench_serialize(c: &mut Criterion) {
     });
     plain.bench_function("vt100", |b| {
         b.iter(|| black_box(vt.screen().contents()))
+    });
+    plain.bench_function("ghostty", |b| {
+        b.iter(|| black_box(gt_plain.format_alloc(None).expect("format")))
     });
     plain.finish();
 }

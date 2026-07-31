@@ -1,12 +1,17 @@
 # rio-vt-benchmark
 
 A benchmark comparing [rio-vt](https://crates.io/crates/rio-vt) against other terminal
-engines: [vt100](https://crates.io/crates/vt100) and
-[alacritty_terminal](https://crates.io/crates/alacritty_terminal).
+engines: [vt100](https://crates.io/crates/vt100),
+[alacritty_terminal](https://crates.io/crates/alacritty_terminal) and
+[libghostty-vt](https://crates.io/crates/libghostty-vt) (Rust bindings to Ghostty's
+terminal core; building it compiles Ghostty from source and requires
+[zig](https://ziglang.org) 0.16 on PATH). libghostty-vt is pinned to a git rev because
+the crates.io release pins a Ghostty commit that only builds with zig 0.15.
 
 Each parses a terminal byte stream into an in-memory screen. The benchmark measures
-parsing a stream, serializing a filled screen (rio-vt and vt100 only, which expose a
-screen-to-ANSI dump), and resizing a filled screen. Everything runs at a fixed 80x24.
+parsing a stream, serializing a filled screen (rio-vt, vt100 and libghostty-vt, which
+expose a screen-to-ANSI dump), and resizing a filled screen. Everything runs at a
+fixed 80x24.
 
 ## Running
 
@@ -20,52 +25,53 @@ Criterion writes an HTML report under `target/criterion/`.
 
 ## Results
 
-Criterion medians on an Apple Silicon Mac: rio-vt 0.5.0-alpha.3, vt100 0.15,
-alacritty_terminal 0.26. Numbers depend on the CPU and the input, so run it yourself.
+Criterion medians on an Apple Silicon Mac: rio-vt 0.5.0-alpha.4, vt100 0.15,
+alacritty_terminal 0.26, libghostty-vt git 72ac98f. Numbers depend on the CPU and the
+input, so run it yourself.
 
 ### Parsing (`process`)
 
 Feeding a byte stream through the parser into the screen. Higher throughput is better.
 
-| Workload            | rio-vt      | vt100      | alacritty   | winner       |
-| ------------------- | ----------- | ---------- | ----------- | ------------ |
-| mixed               | 302 MiB/s   | 221 MiB/s  | 254 MiB/s   | rio-vt       |
-| ascii_plain         | 835 MiB/s   | 196 MiB/s  | 279 MiB/s   | rio-vt 3.0×  |
-| sgr_churn           | 235 MiB/s   | 349 MiB/s  | 332 MiB/s   | vt100        |
-| scroll_storm        | 274 MiB/s   | 101 MiB/s  | 266 MiB/s   | rio-vt       |
-| alt_screen_redraw   | 588 MiB/s   | 231 MiB/s  | 282 MiB/s   | rio-vt 2.1×  |
-| unicode_wide        | 248 MiB/s   | 203 MiB/s  | 337 MiB/s   | alacritty    |
+| Workload            | rio-vt      | vt100      | alacritty   | ghostty     | winner        |
+| ------------------- | ----------- | ---------- | ----------- | ----------- | ------------- |
+| mixed               | 287 MiB/s   | 214 MiB/s  | 248 MiB/s   | 342 MiB/s   | ghostty       |
+| ascii_plain         | 829 MiB/s   | 193 MiB/s  | 293 MiB/s   | 1538 MiB/s  | ghostty 1.9×  |
+| sgr_churn           | 230 MiB/s   | 325 MiB/s  | 331 MiB/s   | 233 MiB/s   | alacritty     |
+| scroll_storm        | 267 MiB/s   | 99 MiB/s   | 272 MiB/s   | 477 MiB/s   | ghostty 1.8×  |
+| alt_screen_redraw   | 565 MiB/s   | 222 MiB/s  | 293 MiB/s   | 529 MiB/s   | rio-vt        |
+| unicode_wide        | 245 MiB/s   | 200 MiB/s  | 338 MiB/s   | 597 MiB/s   | ghostty 1.8×  |
 
 ### Serializing a filled screen
 
-Reading the visible 80x24 screen back out. Lower time is better. Only rio-vt and vt100
-expose a screen-to-ANSI/text dump, so alacritty is not shown here.
+Reading the visible 80x24 screen back out. Lower time is better. alacritty exposes no
+screen-to-ANSI/text dump, so it is not shown here.
 
-| Operation                    | rio-vt   | vt100    | winner      |
-| ---------------------------- | -------- | -------- | ----------- |
-| contents_formatted (ANSI)    | 4.3 µs   | 18.6 µs  | rio-vt 4.3× |
-| contents_plain (text)        | 3.8 µs   | 13.9 µs  | rio-vt 3.7× |
+| Operation                    | rio-vt   | vt100    | ghostty  | winner      |
+| ---------------------------- | -------- | -------- | -------- | ----------- |
+| contents_formatted (ANSI)    | 4.4 µs   | 20.3 µs  | 12.5 µs  | rio-vt 2.9× |
+| contents_plain (text)        | 4.0 µs   | 14.4 µs  | 9.0 µs   | rio-vt 2.3× |
 
 ### Resizing a filled screen
 
 Fill the screen, then resize 80x24 to 100x40 and back. Lower time is better.
 
-| Operation | rio-vt  | vt100   | alacritty | winner      |
-| --------- | ------- | ------- | --------- | ----------- |
-| resize    | 5.0 µs  | 7.5 µs  | 227 µs    | rio-vt      |
+| Operation | rio-vt  | vt100   | alacritty | ghostty | winner      |
+| --------- | ------- | ------- | --------- | ------- | ----------- |
+| resize    | 5.1 µs  | 7.8 µs  | 239 µs    | 70 µs   | rio-vt      |
 
 ## Reading the results
 
-rio-vt parses faster on most input shapes, and by a wide margin when the work is plain
-glyphs (`ascii_plain`) or full-screen repaints (`alt_screen_redraw`). It also serializes
-a screen several times faster, and resizes far faster than either alacritty or vt100
-while still reflowing wrapped lines (vt100 skips reflow, so it clips content on shrink;
-alacritty reflows but is two orders of magnitude slower here).
+ghostty parses fastest on most input shapes: plain glyphs (`ascii_plain`), scrolling
+(`scroll_storm`), and wide characters (`unicode_wide`) by wide margins, plus the mixed
+corpus. rio-vt is second on those shapes and takes full-screen repaints
+(`alt_screen_redraw`) outright. `sgr_churn` goes to alacritty and vt100, where rio-vt's
+and ghostty's style interning costs more than a plain per-cell style.
 
-alacritty is competitive on parsing, landing between rio-vt and vt100 on most shapes and
-taking `unicode_wide` outright. vt100 still parses `sgr_churn` fastest, where rio-vt's
-per-cell style interning costs more than a plain per-cell style. On resize, alacritty is
-the outlier: it reflows its grid far more expensively than either rio-vt or vt100.
+rio-vt serializes a screen 2-3× faster than ghostty and ~5× faster than vt100, and
+resizes far faster than everything else while still reflowing wrapped lines (vt100
+skips reflow, so it clips content on shrink; ghostty reflows at 70 µs; alacritty
+reflows but is two orders of magnitude slower than rio-vt here).
 
 ## What the workloads are
 

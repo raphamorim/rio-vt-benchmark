@@ -1,8 +1,8 @@
 //! Shared setup for the benchmarks in `benches/`.
 //!
-//! Both engines are driven at a fixed 80x24 with no scrollback. `new_rio`
-//! and `new_vt100` build a fresh screen; the `corpus` module builds the byte
-//! streams each benchmark feeds in.
+//! All engines are driven at a fixed 80x24 with no scrollback. `new_rio`,
+//! `new_vt100`, `alacritty::new` and `ghostty::new` build a fresh screen; the
+//! `corpus` module builds the byte streams each benchmark feeds in.
 
 use rio_vt::ansi::CursorShape;
 use rio_vt::crosswords::{Crosswords, CrosswordsSize};
@@ -84,6 +84,23 @@ pub mod alacritty {
         };
         let term = Term::new(cfg, &size(COLS as usize, ROWS as usize), VoidListener);
         (term, Processor::new())
+    }
+}
+
+/// libghostty-vt helpers: Ghostty's terminal core behind its C ABI.
+pub mod ghostty {
+    use super::{COLS, ROWS};
+    pub use libghostty_vt::{Terminal, TerminalOptions};
+
+    /// A fresh 80x24 terminal with `scrollback` history (libghostty bundles
+    /// state and parsing together, like vt100).
+    pub fn new(scrollback: usize) -> Terminal<'static, 'static> {
+        Terminal::new(TerminalOptions {
+            cols: COLS,
+            rows: ROWS,
+            max_scrollback: scrollback,
+        })
+        .expect("ghostty terminal")
     }
 }
 
