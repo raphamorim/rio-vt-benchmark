@@ -210,9 +210,9 @@ dependencies = [
 
 [[package]]
 name = "corcovado"
-version = "0.5.0-alpha.4"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e6de1e193e5763fcf72abf5052e121b59481eb04d57263eeb620bedf6245a86"
+checksum = "d4485657270f8214253b07f52e3a3e06affdd17fa4e06d4fc5b4f0d115f1258d"
 dependencies = [
  "cfg-if 0.1.10",
  "fuchsia-zircon",
@@ -220,8 +220,8 @@ dependencies = [
  "iovec",
  "libc",
  "miow 0.5.0",
- "net2",
  "slab",
+ "socket2",
  "tracing",
  "windows",
  "windows-sys 0.42.0",
@@ -725,17 +725,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "net2"
-version = "0.2.39"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b13b648036a2339d06de780866fbdfda0dde886de7b3af2ddeba8b14f4ee34ac"
-dependencies = [
- "cfg-if 0.1.10",
- "libc",
- "winapi",
-]
-
-[[package]]
 name = "num-traits"
 version = "0.2.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -979,9 +968,9 @@ checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
 
 [[package]]
 name = "rio-grapheme-width"
-version = "0.5.0-alpha.4"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8f25914ce6f360eb33fd7190b1128b35e5feda1232b7cbb735fa50f065fec63"
+checksum = "50dba44bbb5eb9f53186c804ab1a46a97ed9f0475d434767ef8c9b3ea8d24ec2"
 dependencies = [
  "phf",
  "ucd-trie",
@@ -989,9 +978,9 @@ dependencies = [
 
 [[package]]
 name = "rio-graphics"
-version = "0.5.0-alpha.4"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e808b63421de24ca9c19797550b2cd9cf3508db139500b9f799d3c1bae7a7b08"
+checksum = "757d408f94ad2d8cd465a005908c86c62dbab55a1b8ba21444db7c46a3b37af4"
 dependencies = [
  "rustc-hash",
  "tracing",
@@ -1194,6 +1183,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8ed6a63f02c8539c91a8685a86f4099661ba3da017932f6ebbea6de3f0fa7c90"
 
 [[package]]
+name = "socket2"
+version = "0.6.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4"
+dependencies = [
+ "libc",
+ "windows-sys 0.61.2",
+]
+
+[[package]]
 name = "stable_deref_trait"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1234,9 +1233,9 @@ dependencies = [
 
 [[package]]
 name = "teletypewriter"
-version = "0.5.0-alpha.4"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6dfa52a8af5d69ed060f428f69a2f5d3aa326a5570f6b0f61856b0a5cac2d69b"
+checksum = "90ae4da081d603b942e2ed62d063e7a5cf083427caf26c7627c17a1b6a0b22b6"
 dependencies = [
  "corcovado",
  "dirs",
@@ -1499,22 +1498,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "winapi"
-version = "0.3.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c839a674fcd7a98952e593242ea400abe93992746761e38641405d28b00f419"
-dependencies = [
- "winapi-i686-pc-windows-gnu",
- "winapi-x86_64-pc-windows-gnu",
-]
-
-[[package]]
-name = "winapi-i686-pc-windows-gnu"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac3b87c63620426dd9b991e5ce0329eff545bccbbb34f3be09ff6fb6ab51b7b6"
-
-[[package]]
 name = "winapi-util"
 version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1522,12 +1505,6 @@ checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
  "windows-sys 0.61.2",
 ]
-
-[[package]]
-name = "winapi-x86_64-pc-windows-gnu"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 
 [[package]]
 name = "windows"

@@ -12,7 +12,7 @@
 use criterion::{
     criterion_group, criterion_main, BatchSize, Criterion, Throughput,
 };
-use rio_vt_benchmark::{alacritty, corpus, ghostty, new_rio, new_vt100};
+use rio_vt_benchmark::{alacritty, corpus, new_rio, new_vt100};
 
 fn parse_workload(c: &mut Criterion, name: &str, data: Vec<u8>) {
     let mut group = c.benchmark_group(name);
@@ -35,13 +35,6 @@ fn parse_workload(c: &mut Criterion, name: &str, data: Vec<u8>) {
         b.iter_batched(
             || alacritty::new(0),
             |(mut term, mut parser)| parser.advance(&mut term, &data),
-            BatchSize::SmallInput,
-        )
-    });
-    group.bench_function("ghostty", |b| {
-        b.iter_batched(
-            || ghostty::new(0),
-            |mut term| term.vt_write(&data),
             BatchSize::SmallInput,
         )
     });

@@ -88,6 +88,7 @@ pub mod alacritty {
 }
 
 /// libghostty-vt helpers: Ghostty's terminal core behind its C ABI.
+#[cfg(feature = "ghostty")]
 pub mod ghostty {
     use super::{COLS, ROWS};
     pub use libghostty_vt::{Terminal, TerminalOptions};

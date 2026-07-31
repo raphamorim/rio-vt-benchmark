@@ -8,8 +8,7 @@ use criterion::{
     criterion_group, criterion_main, BatchSize, Criterion,
 };
 use rio_vt_benchmark::{
-    alacritty, corpus, ghostty, new_rio, new_rio_scrollback, new_vt100, rio_dims,
-    COLS, ROWS,
+    alacritty, corpus, new_rio, new_rio_scrollback, new_vt100, rio_dims, COLS, ROWS,
 };
 
 fn bench_resize(c: &mut Criterion) {
@@ -56,21 +55,6 @@ fn bench_resize(c: &mut Criterion) {
             |mut term| {
                 term.resize(alacritty::size(100, 40));
                 term.resize(alacritty::size(80, 24));
-            },
-            BatchSize::SmallInput,
-        )
-    });
-
-    group.bench_function("ghostty", |b| {
-        b.iter_batched(
-            || {
-                let mut term = ghostty::new(0);
-                term.vt_write(&data);
-                term
-            },
-            |mut term| {
-                term.resize(100, 40, 8, 16).expect("resize");
-                term.resize(80, 24, 8, 16).expect("resize");
             },
             BatchSize::SmallInput,
         )
@@ -126,21 +110,6 @@ fn bench_resize_reflow(c: &mut Criterion) {
             |mut term| {
                 term.resize(alacritty::size(100, 40));
                 term.resize(alacritty::size(80, 24));
-            },
-            BatchSize::LargeInput,
-        )
-    });
-
-    group.bench_function("ghostty", |b| {
-        b.iter_batched(
-            || {
-                let mut term = ghostty::new(scrollback);
-                term.vt_write(&data);
-                term
-            },
-            |mut term| {
-                term.resize(100, 40, 8, 16).expect("resize");
-                term.resize(80, 24, 8, 16).expect("resize");
             },
             BatchSize::LargeInput,
         )
